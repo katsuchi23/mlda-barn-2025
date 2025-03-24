@@ -16,15 +16,17 @@ docker push mldarobotics/barn2025:latest
 ## Pull from the DockerHub
 
 ```shell
-docker run --rm -dt --name barn2025 \
-	--gpus all \
-	-e DISPLAY="$DISPLAY" \
-	-e QT_X11_NO_MITSHM=1 \
-	-e LIBGL_ALWAYS_SOFTWARE=1 \
-	-e NVIDIA_DRIVER_CAPABILITIES=all \
-	-v /tmp/.X11-unix:/tmp/.X11-unix \
-	-v ~/mlda-barn-2025:/jackal_ws/src/mlda-barn-2025 \
-	barn2025:latest
+docker volume create barn2025_data
+
+docker run -dt --name barn2025 \
+    --gpus all \
+    -e DISPLAY="$DISPLAY" \
+    -e QT_X11_NO_MITSHM=1 \
+    -e LIBGL_ALWAYS_SOFTWARE=1 \
+    -e NVIDIA_DRIVER_CAPABILITIES=all \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -v barn2025_data:/jackal_ws/src/mlda-barn-2025 \
+    barn2025:latest
 ```
 
 ## ROS
