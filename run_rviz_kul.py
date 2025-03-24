@@ -50,14 +50,15 @@ if __name__ == "__main__":
     elif args.world_idx < 360:  # Dynamic environment from 300-359
         world_name = "DynaBARN/world_%d.world" %(args.world_idx - 300)
         INIT_POSITION = [11, 0, 3.14]  # in world frame
-        GOAL_POSITION = [-19, 0]  # relative to the initial position
+        GOAL_POSITION_ABS = [-8, 0]  
+        GOAL_POSITION = [GOAL_POSITION_ABS[0] - INIT_POSITION[0], GOAL_POSITION_ABS[1] - INIT_POSITION[1]] # relative to the initial position
     else:
         raise ValueError("World index %d does not exist" %args.world_idx)
     
     # add bit of randomness to INIT_POSITION
-    # INIT_POSITION[0] += np.random.uniform(-0.25, 0.25)
-    # INIT_POSITION[1] += np.random.uniform(-0.25, 0.25)
-    # INIT_POSITION[2] += np.random.uniform(-1, 1)
+    INIT_POSITION[0] += np.random.uniform(-0.25, 0.25)
+    INIT_POSITION[1] += np.random.uniform(-0.25, 0.25)
+    INIT_POSITION[2] += np.random.uniform(-1, 1)
     
     print(">>>>>>>>>>>>>>>>>> Loading Gazebo Simulation with %s <<<<<<<<<<<<<<<<<<" %(world_name))   
     rospack = rospkg.RosPack()
@@ -161,8 +162,7 @@ if __name__ == "__main__":
         curr_coor = (pos.x, pos.y)
         # print("Time: %.2f (s), x: %.2f (m), y: %.2f (m)" %(curr_time - start_time, *curr_coor), end="\r")
         collided = gazebo_sim.get_hard_collision()
-        while rospy.get_time() - curr_time < 0.1:
-            time.sleep(0.01)
+        time.sleep(0.01)
 
 
     
