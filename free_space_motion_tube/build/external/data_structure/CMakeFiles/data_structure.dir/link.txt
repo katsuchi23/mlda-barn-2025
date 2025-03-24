@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC   -shared -Wl,-soname,libdata_structure.so -o libdata_structure.so CMakeFiles/data_structure.dir/src/data_structure/utils.c.o 
