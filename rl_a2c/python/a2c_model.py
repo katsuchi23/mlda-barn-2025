@@ -94,15 +94,15 @@ class ActorCritic():
         self.transitions = []
 
     def get_actor_loss(self, lidar, non_lidar, action, advantage, done):
-        print("Getting actor loss...")
+        # print("Getting actor loss...")
         mu, sigma = self.actor.forward(lidar.to(self.device), non_lidar.to(self.device))
         m = torch.distributions.Normal(mu, sigma)
         log_prob = m.log_prob(action)
-        print(f"Log prob: {log_prob}, Advantage: {advantage}")
+        # print(f"Log prob: {log_prob}, Advantage: {advantage}")
         return (-log_prob * advantage).mean()
 
     def get_critic_loss(self, lidar, non_lidar, action, reward, next_lidar, next_non_lidar, done):
-        print("Getting critic loss...")
+        # print("Getting critic loss...")
         value = self.critic.forward(lidar.to(self.device), non_lidar.to(self.device))
         next_value = self.critic.forward(next_lidar.to(self.device), next_non_lidar.to(self.device))
         td_target = reward + self.gamma * next_value * (1 - done)
@@ -110,7 +110,7 @@ class ActorCritic():
         return F.mse_loss(value, td_target)
 
     def get_action(self, lidar, non_lidar):
-        print("Getting action...")
+        # print("Getting action...")
         mu, sigma = self.actor.forward(lidar.to(self.device), non_lidar.to(self.device))
         m = torch.distributions.Normal(mu, sigma)
         action = m.sample().detach().cpu().numpy()
@@ -123,7 +123,7 @@ class ActorCritic():
         return value.item()
 
     def update_transitions(self, lidar, non_lidar, action, reward, done):
-        print("Updating transitions...")
+        # print("Updating transitions...")
         self.transitions.append((lidar, non_lidar, action, reward, done))
         
         # If we have at least two transitions, we can do an online update
@@ -131,7 +131,7 @@ class ActorCritic():
             self.online_update()
 
     def online_update(self):
-        print("Online update...")
+        # print("Online update...")
 
         # Get the most recent transition
         current_lidar, current_non_lidar, action, reward, done = self.transitions[-1]
@@ -153,12 +153,12 @@ class ActorCritic():
         next_lidar_tensor = torch.tensor(next_lidar, dtype=torch.float32).unsqueeze(0).to(self.device)
         next_non_lidar_tensor = torch.tensor(next_non_lidar, dtype=torch.float32).unsqueeze(0).to(self.device)
         
-        print("Getting losses...")
+        # print("Getting losses...")
         advantage = reward + self.gamma * self.get_value(next_lidar_tensor, next_non_lidar_tensor) - self.get_value(lidar_tensor, non_lidar_tensor)
-        print(f"Advantage: {advantage}")
+        # print(f"Advantage: {advantage}")
         actor_loss = self.get_actor_loss(lidar_tensor, non_lidar_tensor, action_tensor, advantage, done)
         critic_loss = self.get_critic_loss(lidar_tensor, non_lidar_tensor, action_tensor, reward, next_lidar_tensor, next_non_lidar_tensor, done)
-        print(f"Actor loss: {actor_loss}, Critic loss: {critic_loss}")
+        # print(f"Actor loss: {actor_loss}, Critic loss: {critic_loss}")
         
         # Update actor
         self.actor_optimizer.zero_grad()
@@ -184,9 +184,9 @@ if __name__ == "__main__":
     lidar_tensor = torch.randn(1, 1, lidar_dim).to(device)
     non_lidar_tensor = torch.randn(1, 1, non_lidar_dim).to(device)
     action = actor(lidar_tensor, non_lidar_tensor)
-    print(action)
+    # print(action)
 
     # pass a random tensor through the critic
     value = critic(lidar_tensor, non_lidar_tensor, action)
-    print(value)
+    # print(value)
     

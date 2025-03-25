@@ -31,6 +31,8 @@ if __name__ == "__main__":
     parser.add_argument('--world_idx', type=int, default=259)
     parser.add_argument('--gui', action="store_true")
     parser.add_argument('--out', type=str, default="out.txt")
+    parser.add_argument('--kul_weight', type=float, default=0.7, help='Weight for KUL algorithm (0.0-1.0)')
+    parser.add_argument('--rl_weight', type=float, default=0.3, help='Weight for RL algorithm (0.0-1.0)')
     args = parser.parse_args()
     
     ##########################################################################################
@@ -105,10 +107,12 @@ if __name__ == "__main__":
     ## (Customize this block to add your own navigation stack)
     ##########################################################################################
     
-    launch_file = join(base_path, '..', 'jackal_helper/launch/move_base_rl.launch')
+    launch_file = join(base_path, '..', 'jackal_helper/launch/move_base_rl_kul.launch')
     nav_stack_process = subprocess.Popen([
         'roslaunch',
-        launch_file
+        launch_file,
+        'kul_weight:=' + str(args.kul_weight),
+        'rl_weight:=' + str(args.rl_weight)
     ])
     
     # Make sure your navigation stack recives the correct goal position defined in GOAL_POSITION
@@ -201,4 +205,3 @@ if __name__ == "__main__":
         msg.status = "timeout"
     
     pub.publish(msg)
-    

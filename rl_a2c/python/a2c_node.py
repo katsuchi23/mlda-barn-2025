@@ -212,10 +212,10 @@ class ROSNode:
         lidar_data = self.tensor_lidar.squeeze(0).tolist()
         non_lidar_data = self.tensor_non_lidar.squeeze(0).tolist()
         action = [v, w]
-        print("Goal: ", self.local_goal_x, self.local_goal_y)
-        print("Action: ", action)
-        print("Reward: ", reward)
-        print("Done: ", self.done)
+        # print("Goal: ", self.local_goal_x, self.local_goal_y)
+        # print("Action: ", action)
+        # print("Reward: ", reward)
+        # print("Done: ", self.done)
         self.model.update_transitions(lidar_data, non_lidar_data, action, reward, self.done)
 
     def run(self):

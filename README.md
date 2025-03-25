@@ -33,12 +33,31 @@ docker run -dt --name barn2025 \
 
 - Run environment
 ```shell
+# Run KUL algorithm
 python run_rviz_kul.py --world_idx 0
+
+# Run RL algorithm
 python run_rviz_rl.py --world_idx 0
+
+# Run combined algorithm (KUL + RL) with custom weights
+python run_combined.py --world_idx 0 --kul_weight 0.7 --rl_weight 0.3
+
+# To debug
+rostopic echo /cmd_vel_kul
+rostopic echo /cmd_vel_rl
+rostopic echo /cmd_vel
+
+# Other utilities
 python check_cuda_gpu.py 
 python rl_a2c/python/a2c_model.py
 rostopic hz /cmd_vel
 rostopic hz /front/scan
+```
+
+- Launch files
+```shell
+# Launch combined navigation stack with both KUL and RL algorithms
+roslaunch jackal_helper move_base_rl_kul.launch kul_weight:=0.7 rl_weight:=0.3
 ```
 
 - Compile ROS Setup
