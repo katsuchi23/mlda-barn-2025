@@ -28,7 +28,7 @@ def path_coord_to_gazebo_coord(x, y):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'test BARN navigation challenge')
-    parser.add_argument('--world_idx', type=int, default=0)
+    parser.add_argument('--world_idx', type=int, default=259)
     parser.add_argument('--gui', action="store_true")
     parser.add_argument('--out', type=str, default="out.txt")
     args = parser.parse_args()
@@ -49,8 +49,8 @@ if __name__ == "__main__":
         GOAL_POSITION = [0, 10]  # relative to the initial position
     elif args.world_idx < 360:  # Dynamic environment from 300-359
         world_name = "DynaBARN/world_%d.world" %(args.world_idx - 300)
-        INIT_POSITION = [11, 0, 3.14]  # in world frame
-        GOAL_POSITION = [-19, 0]  # relative to the initial position
+        INIT_POSITION = [0, 0, 3.14]  # in world frame
+        GOAL_POSITION = [-8, 0]  # relative to the initial position
     else:
         raise ValueError("World index %d does not exist" %args.world_idx)
     
@@ -147,27 +147,58 @@ if __name__ == "__main__":
     start_time = curr_time
     start_time_cpu = time.time()
     collided = False
-
-    while compute_distance(goal_coor, curr_coor) > 1 and curr_time - start_time < 1000:
+    step_count = 0
+    collision_count = 0
+    
+    print("[INFO] Starting navigation from", init_coor, "to", goal_coor)
+    
+    # loop inside this
+    while compute_distance(goal_coor, curr_coor) > 1 and curr_time - start_time < 100:
+        step_count += 1
         pos = gazebo_sim.get_model_state().pose.position
         curr_coor = (pos.x, pos.y)
         collided = gazebo_sim.get_hard_collision()
+        # print(collided)
+        
+        
+        # Only log every 100 steps or on collision
+        if step_count % 100 == 0:
+            dist_to_goal = compute_distance(goal_coor, curr_coor)
+            elapsed = curr_time - start_time
+            print(f"[STEP {step_count}] Position: ({curr_coor[0]:.2f}, {curr_coor[1]:.2f}) | Distance to goal: {dist_to_goal:.2f} | Time: {elapsed:.2f}s")
+        
         if collided:
-            print("Collided, resetting...")
+            collision_count += 1
+            print(f"[COLLISION {collision_count}] Detected at position ({curr_coor[0]:.2f}, {curr_coor[1]:.2f})")
             msg.status = "collided"
             pub.publish(msg)
 
+            reset_count = 0
             while compute_distance(init_coor, curr_coor) > 0.1 or collided:
-                print("Resetting...")
+                reset_count += 1
+                if reset_count % 5 == 0:  # Only log every 5 reset attempts
+                    print(f"[RESET {reset_count}] Position: ({curr_coor[0]:.2f}, {curr_coor[1]:.2f}) | Collision status: {collided}")
+                
                 gazebo_sim.reset() # Reset to the initial position
                 pos = gazebo_sim.get_model_state().pose.position
                 curr_coor = (pos.x, pos.y)
                 collided = gazebo_sim.get_hard_collision()
-                gazebo_sim.reset_odometry()
-                time.sleep(1)
+                # gazebo_sim.reset()
+                # time.sleep(5)
 
+            print(f"[INFO] Reset complete after {reset_count} attempts. Continuing navigation.")
             msg.status = "continue"
             pub.publish(msg)
+        
+        curr_time = rospy.get_time()
 
-    msg.status = "success"
+    # Final status
+    if compute_distance(goal_coor, curr_coor) <= 1:
+        print(f"[SUCCESS] Goal reached at position ({curr_coor[0]:.2f}, {curr_coor[1]:.2f}) in {curr_time-start_time:.2f}s with {collision_count} collisions")
+        msg.status = "success"
+    else:
+        print(f"[TIMEOUT] Navigation timed out after {curr_time-start_time:.2f}s at distance {compute_distance(goal_coor, curr_coor):.2f} from goal")
+        msg.status = "timeout"
+    
     pub.publish(msg)
+    
